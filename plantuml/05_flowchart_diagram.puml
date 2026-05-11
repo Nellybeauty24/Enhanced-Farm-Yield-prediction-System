@@ -1,0 +1,139 @@
+@startuml Flowchart_Diagram
+title Soil Nutrition Backend — System Flowchart\n(API Request Processing Flow)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam ArrowColor #343A40
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityBorderColor #495057
+skinparam ActivityDiamondBackgroundColor #E3F2FD
+skinparam ActivityDiamondBorderColor #1976D2
+skinparam ActivityStartColor #2E7D32
+skinparam ActivityEndColor #C62828
+skinparam PartitionBackgroundColor #F5F5F5
+skinparam PartitionBorderColor #BDBDBD
+
+' ══════════════════════════════════════════
+' CROP PREDICTION FLOWCHART
+' ══════════════════════════════════════════
+start
+
+:HTTP Request arrives at Flask;
+
+fork
+  :POST /predict\n[Authenticated];
+fork again
+  :POST /predict-yield\n[Public];
+fork again
+  :POST /predict/save\n[Authenticated];
+fork again
+  :GET /crops | /crops/<name>/requirements\n[Public];
+fork again
+  :GET /analytics/summary | /yield-history\n[Authenticated];
+end fork
+
+' ── Auth Check ──
+if (Endpoint requires auth?) then (Yes)
+  :Extract Bearer token\nfrom Authorization header;
+  if (Token present?) then (No)
+    #FFB3B3:Return 401\n"Token is missing";
+    stop
+  endif
+  :jwt.decode(token, SECRET_KEY, HS256);
+  if (Token valid & not expired?) then (No)
+    if (Expired?) then (Yes)
+      #FFB3B3:Return 401\n"Token has expired";
+    else (Invalid)
+      #FFB3B3:Return 401\n"Invalid token";
+    endif
+    stop
+  endif
+  :Load current_user from DB;
+  if (User exists?) then (No)
+    #FFB3B3:Return 401\n"User not found";
+    stop
+  endif
+else (No)
+endif
+
+' ── Input Validation ──
+:Parse JSON request body;
+if (Body is JSON?) then (No)
+  #FFB3B3:Return 400\n"Request must be JSON";
+  stop
+endif
+:Run Marshmallow Schema.load();
+if (Schema validates?) then (No)
+  #FFB3B3:Return 400 Validation Error\n{ field: [error_messages] };
+  stop
+endif
+
+' ── Route Decision ──
+if (Route = /predict?) then (Yes)
+
+  ' ── Crop Prediction Path ──
+  :CropPredictionService.predict();
+  if (Model loaded?) then (No)
+    #FFB3B3:Return 500\n"Model not loaded";
+    stop
+  endif
+  :Feature Engineering\n(SFI, NP_ratio, Climate Index,\npH_Stress, N×pH, P×pH, Rain/Temp);
+  :CatBoostClassifier.predict_proba(df);
+  :Sort probabilities DESC → Top-3;
+  :Extract recommended_crop + confidence;
+  :RecommendationService\n.generate_recommendations();
+  if (Crop in CROP_REQUIREMENTS?) then (Yes)
+    :Generate crop-specific advice\n(pH gaps, N/P/K deficits,\ntemp & rainfall warnings);
+  else (No)
+    :Generate generic soil advice;
+  endif
+  :Build response dict;
+  #D4EDDA:Return 200 JSON\n{ recommended_crop, probability,\ntop_recommendations, recommendations };
+
+elseif (Route = /predict-yield?) then (Yes)
+
+  ' ── Yield Prediction Path ──
+  :CropPredictionService.predict_yield();
+  if (Yield model loaded?) then (No)
+    :Attempt reload from disk;
+    if (File exists?) then (No)
+      #FFB3B3:Return 500\n"Yield model file not found";
+      stop
+    endif
+  endif
+  :Feature Engineering\n(SFI, NP_ratio, climate_index);
+  :CatBoostRegressor.predict(df);
+  :Round to 2 decimal places;
+  #D4EDDA:Return 200 JSON\n{ predicted_yield, unit: "kg/ha" };
+
+elseif (Route = /predict/save?) then (Yes)
+
+  ' ── Save Path ──
+  :Query prediction_history WHERE\nuser_id=? AND same N,P,K,pH\nAND timestamp >= now - 5min;
+  if (Duplicate exists?) then (Yes)
+    #FFB3B3:Return 409 Conflict\n"Duplicate submission";
+    stop
+  endif
+  :Build PredictionHistory record\n(full context + geo + ML results);
+  :db.session.add(record);
+  :db.session.commit();
+  #D4EDDA:Return 201 Created\n"Prediction profile saved";
+
+elseif (Route = /analytics?) then (Yes)
+
+  ' ── Analytics Path ──
+  :Query prediction_history\nfiltered by user_id;
+  :Aggregate metrics\n(count, avg_confidence,\nyield_gap = predicted - actual);
+  if (Route = /yield-history?) then (Yes)
+    :GROUP BY month\nORDER BY month ASC\n(last 365 days);
+  endif
+  #D4EDDA:Return 200 JSON\n{ summary or yield_history };
+
+else (GET /crops)
+  :RecommendationService\n.CROP_REQUIREMENTS.keys();
+  #D4EDDA:Return 200 JSON\n{ crops: [...], total: 9 };
+endif
+
+stop
+
+@enduml

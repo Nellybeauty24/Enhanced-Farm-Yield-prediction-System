@@ -1,0 +1,21 @@
+# Python-related
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.pytest_cache/
+app.db
+
+# UI-related
+ui/node_modules/
+ui/dist/
+ui/.env
+
+# Version control
+.git/
+.gitignore
+
+# OS-related
+.DS_Store
+Thumbs.db

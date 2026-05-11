@@ -1,0 +1,110 @@
+@startuml ERD_Diagram
+title Soil Nutrition Backend — Entity Relationship Diagram (ERD)
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam entity {
+  BackgroundColor #F8F9FA
+  BorderColor #495057
+  FontSize 12
+}
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor #F9A825
+}
+
+' ══════════════════════════════════════
+' ENTITY: users
+' ══════════════════════════════════════
+entity "users" as users {
+  * **id** : INTEGER <<PK, AUTO_INCREMENT>>
+  --
+  * email : VARCHAR(120) <<UNIQUE, NOT NULL, INDEX>>
+  * name : VARCHAR(100) <<NOT NULL>>
+  * password_hash : VARCHAR(256) <<NOT NULL>>
+    created_at : DATETIME <<DEFAULT: utcnow>>
+}
+
+' ══════════════════════════════════════
+' ENTITY: prediction_history
+' ══════════════════════════════════════
+entity "prediction_history" as ph {
+  * **id** : INTEGER <<PK, AUTO_INCREMENT>>
+  --
+    user_id : INTEGER <<FK → users.id, NULLABLE>>
+    timestamp : DATETIME <<INDEX, DEFAULT: utcnow>>
+  ..Soil Input Features..
+  * nitrogen : FLOAT <<NOT NULL>>
+  * phosphorus : FLOAT <<NOT NULL>>
+  * potassium : FLOAT <<NOT NULL>>
+  * ph : FLOAT <<NOT NULL>>
+    humidity : FLOAT
+    temperature : FLOAT
+    rainfall : FLOAT
+  ..Prediction Results..
+  * recommended_crop : VARCHAR(100) <<NOT NULL>>
+  * confidence : FLOAT <<NOT NULL>>
+    predicted_yield : FLOAT
+    yield_unit : VARCHAR(20) <<DEFAULT: 'kg/ha'>>
+  ..Geographic / Farm Context..
+    state : VARCHAR(100)
+    local_gov : VARCHAR(100)
+    plot_size : FLOAT
+    longitude : FLOAT
+    latitude : FLOAT
+  ..Agro-Ecological Context..
+    region : VARCHAR(100)
+    agro_zone : VARCHAR(100)
+    soil_type : VARCHAR(100)
+    pest_type : VARCHAR(100)
+    pest_severity : VARCHAR(100)
+    rainfall_variability : VARCHAR(100)
+    labor_input : VARCHAR(100)
+  ..Post-Harvest Tracking..
+    actual_yield : FLOAT
+}
+
+' ══════════════════════════════════════
+' RELATIONSHIP
+' ══════════════════════════════════════
+users ||--o{ ph : "1 user\nhas 0..* predictions\n(cascade delete)"
+
+' ══════════════════════════════════════
+' NOTES
+' ══════════════════════════════════════
+note top of users
+  <b>Authentication</b>
+  Passwords stored as
+  Werkzeug hash (PBKDF2).
+  JWT token issued on
+  login (7-day expiry).
+end note
+
+note right of ph
+  <b>Yield Gap Tracking</b>
+  predicted_yield stored at save time.
+  actual_yield updated later via
+  PATCH /predict/<id>/actual-yield.
+  Gap = actual_yield - predicted_yield.
+
+  <b>Duplicate Guard</b>
+  API rejects identical (N, P, K, pH)
+  submissions within 5 minutes
+  for the same user_id.
+end note
+
+' ══════════════════════════════════════
+' DERIVED / VIRTUAL (not stored)
+' ══════════════════════════════════════
+note as derived_note
+  <b>Feature-Engineered columns (NOT stored — computed at inference time):</b>
+  soil_fertility_index = nitrogen + phosphorus + potassium
+  np_ratio             = nitrogen / (phosphorus + ε)
+  climate_index        = rainfall × temperature
+  ph_stress            = |ph − 7.0|
+  n_ph_inter           = nitrogen × ph
+  p_ph_inter           = phosphorus × ph
+  rain_temp_ratio      = rainfall / (temperature + ε)
+end note
+
+@enduml

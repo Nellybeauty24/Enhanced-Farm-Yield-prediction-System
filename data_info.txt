@@ -1,0 +1,34 @@
+Columns: ['region', 'state', 'agro_zone', 'crop_type', 'crop_variety', 'soil_type', 'farm_size_ha', 'soil_pH', 'soil_nitrogen', 'soil_phosphorus', 'soil_potassium', 'rainfall_mm', 'temperature_C', 'pest_type', 'pest_severity', 'rainfall_variability', 'labor_input', 'yield_kg_ha']
+Head:
+         region   state                agro_zone crop_type   crop_variety  soil_type  farm_size_ha  soil_pH  soil_nitrogen  soil_phosphorus  soil_potassium  rainfall_mm  temperature_C    pest_type pest_severity rainfall_variability labor_input  yield_kg_ha
+0    Southsouth  Rivers             Humid Forest    Pepper  Nsukka Yellow  Lateritic           0.9      6.5           17.5             26.1           182.9       1084.7           30.4   Whiteflies      Moderate               Normal      Medium         5724
+1     Northeast   Gombe            Sudan Savanna     Beans     IT89KD-288      Sandy           2.2      7.3           21.8              8.4           125.1        886.4           30.9   Pod Borers           Low              Erratic         Low         1817
+2     Northwest  Jigawa            Sudan Savanna   Sorghum    Local Kaura      Loamy           2.9      5.0           24.1             11.9            56.9        600.0           25.7       Aphids           Low              Erratic         Low         1178
+3  Northcentral   Benue  Northern Guinea Savanna     Maize    Local White     Clayey           0.5      5.1           23.4              7.6            97.3        969.5           31.9   Pod Borers           Low               Normal        High         2775
+4     Southwest    Osun             Humid Forest       Yam       D. alata      Loamy           4.6      6.7           18.4             27.3           111.6       1313.4           24.7  Stem Borers           Low               Normal      Medium         6517
+Info:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 20000 entries, 0 to 19999
+Data columns (total 18 columns):
+ #   Column                Non-Null Count  Dtype  
+---  ------                --------------  -----  
+ 0   region                20000 non-null  object 
+ 1   state                 20000 non-null  object 
+ 2   agro_zone             20000 non-null  object 
+ 3   crop_type             20000 non-null  object 
+ 4   crop_variety          20000 non-null  object 
+ 5   soil_type             20000 non-null  object 
+ 6   farm_size_ha          20000 non-null  float64
+ 7   soil_pH               20000 non-null  float64
+ 8   soil_nitrogen         20000 non-null  float64
+ 9   soil_phosphorus       20000 non-null  float64
+ 10  soil_potassium        20000 non-null  float64
+ 11  rainfall_mm           20000 non-null  float64
+ 12  temperature_C         20000 non-null  float64
+ 13  pest_type             20000 non-null  object 
+ 14  pest_severity         20000 non-null  object 
+ 15  rainfall_variability  20000 non-null  object 
+ 16  labor_input           20000 non-null  object 
+ 17  yield_kg_ha           20000 non-null  int64  
+dtypes: float64(7), int64(1), object(10)
+memory usage: 2.7+ MB

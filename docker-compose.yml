@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:////app/data/app.db
+      - SECRET_KEY=your-secret-key-change-this
+    volumes:
+      - ./data:/app/data
+    # Initialize DB then start app
+    command: >
+      sh -c "python init_db.py && gunicorn --bind 0.0.0.0:5000 run:app"
+    restart: always
+
+  frontend:
+    build: ./ui
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  data:

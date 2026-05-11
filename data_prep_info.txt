@@ -1,0 +1,9 @@
+Target Variable: yield_kg_ha
+Features Shape: (20000, 20)
+Target Shape: (20000,)
+
+Categorical Columns (10):
+['region', 'state', 'agro_zone', 'crop_type', 'crop_variety', 'soil_type', 'pest_type', 'pest_severity', 'rainfall_variability', 'labor_input']
+
+Numeric Columns (10):
+['farm_size_ha', 'soil_pH', 'soil_nitrogen', 'soil_phosphorus', 'soil_potassium', 'rainfall_mm', 'temperature_C', 'soil_fertility_index', 'np_ratio', 'climate_index']

@@ -1,0 +1,129 @@
+@startuml Use_Case_Diagram
+title Soil Nutrition Backend — Use Case Diagram
+
+skinparam actorStyle awesome
+skinparam usecaseBackgroundColor #F8F9FA
+skinparam usecaseBorderColor #495057
+skinparam usecaseFontSize 11
+skinparam arrowColor #343A40
+skinparam shadowing false
+
+left to right direction
+
+' ══════════════════════════════════════
+' ACTORS
+' ══════════════════════════════════════
+actor "Guest\n(Unauthenticated)" as Guest #LightBlue
+actor "Farmer\n(Authenticated)" as Farmer #LightGreen
+actor "ML Engine\n(CatBoost)" as ML #LightYellow
+actor "Admin /\nSystem" as Admin #LightCoral
+
+' ══════════════════════════════════════
+' SYSTEM BOUNDARY
+' ══════════════════════════════════════
+rectangle "Soil Nutrition Advisory System" {
+
+  ' ── Authentication ──
+  package "Authentication" {
+    usecase "Register Account" as UC_Register
+    usecase "Login" as UC_Login
+    usecase "Logout" as UC_Logout
+    usecase "Validate JWT Token" as UC_JWT
+  }
+
+  ' ── Crop Prediction ──
+  package "Crop Prediction" {
+    usecase "Enter Soil & Climate Data" as UC_Input
+    usecase "Validate Input Data" as UC_Validate
+    usecase "Perform Feature Engineering" as UC_FeatEng
+    usecase "Classify Recommended Crop\n(Top-3 Predictions)" as UC_Classify
+    usecase "Generate Agronomic\nRecommendations" as UC_Recommend
+    usecase "View Prediction Results" as UC_Results
+  }
+
+  ' ── Yield Prediction ──
+  package "Yield Prediction" {
+    usecase "Predict Crop Yield\n(kg/ha)" as UC_Yield
+    usecase "View Yield Estimate" as UC_YieldResult
+  }
+
+  ' ── Data Management ──
+  package "Data Management" {
+    usecase "Save Prediction Record" as UC_Save
+    usecase "Log Actual Harvest Yield" as UC_LogHarvest
+    usecase "View Crop Requirements" as UC_CropReq
+    usecase "Browse Available Crops" as UC_ListCrops
+  }
+
+  ' ── Analytics & Dashboard ──
+  package "Analytics & Dashboard" {
+    usecase "View Dashboard Summary\n(avg confidence, yield gap)" as UC_Dashboard
+    usecase "View Monthly Yield\nTrend History" as UC_YieldHistory
+    usecase "Monitor Prediction\nAccuracy" as UC_Monitor
+  }
+
+  ' ── System / Health ──
+  package "System" {
+    usecase "Health Check" as UC_Health
+    usecase "Train / Retrain Models" as UC_Train
+  }
+
+}
+
+' ══════════════════════════════════════
+' GUEST ASSOCIATIONS
+' ══════════════════════════════════════
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_Yield
+Guest --> UC_YieldResult
+Guest --> UC_ListCrops
+Guest --> UC_CropReq
+Guest --> UC_Health
+
+' ══════════════════════════════════════
+' FARMER ASSOCIATIONS
+' ══════════════════════════════════════
+Farmer --> UC_Input
+Farmer --> UC_Results
+Farmer --> UC_Save
+Farmer --> UC_LogHarvest
+Farmer --> UC_Dashboard
+Farmer --> UC_YieldHistory
+Farmer --> UC_Logout
+
+' ══════════════════════════════════════
+' ML ENGINE ASSOCIATIONS
+' ══════════════════════════════════════
+ML --> UC_Classify
+ML --> UC_Yield
+
+' ══════════════════════════════════════
+' ADMIN ASSOCIATIONS
+' ══════════════════════════════════════
+Admin --> UC_Train
+Admin --> UC_Monitor
+
+' ══════════════════════════════════════
+' INCLUDE / EXTEND RELATIONSHIPS
+' ══════════════════════════════════════
+UC_Input ..> UC_JWT : <<include>>
+UC_Save ..> UC_JWT : <<include>>
+UC_LogHarvest ..> UC_JWT : <<include>>
+UC_Dashboard ..> UC_JWT : <<include>>
+UC_YieldHistory ..> UC_JWT : <<include>>
+
+UC_Input ..> UC_Validate : <<include>>
+UC_Validate ..> UC_FeatEng : <<include>>
+UC_FeatEng ..> UC_Classify : <<include>>
+UC_Classify ..> UC_Recommend : <<include>>
+
+UC_Yield ..> UC_Validate : <<include>>
+UC_Yield ..> UC_FeatEng : <<include>>
+
+UC_Results ..> UC_Save : <<extend>>
+UC_Save ..> UC_LogHarvest : <<extend>>
+
+UC_Dashboard ..> UC_Monitor : <<include>>
+
+@enduml

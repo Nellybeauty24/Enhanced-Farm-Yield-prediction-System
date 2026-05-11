@@ -1,0 +1,166 @@
+@startuml System_Architecture
+title Soil Nutrition Backend — System Architecture Diagram
+
+skinparam shadowing false
+skinparam rectangleBorderColor #495057
+skinparam componentBorderColor #495057
+skinparam componentBackgroundColor #F8F9FA
+skinparam databaseBackgroundColor #FFF9C4
+skinparam databaseBorderColor #F9A825
+skinparam arrowColor #343A40
+skinparam nodeBorderColor #78909C
+skinparam nodeBackgroundColor #ECEFF1
+skinparam packageBackgroundColor #E8F5E9
+skinparam packageBorderColor #43A047
+skinparam cloudBackgroundColor #E3F2FD
+skinparam cloudBorderColor #1976D2
+skinparam noteBorderColor #9E9E9E
+skinparam noteBackgroundColor #FAFAFA
+skinparam actorStyle awesome
+
+' ══════════════════════════════════════
+' CLIENT TIER
+' ══════════════════════════════════════
+node "Client Browser" as ClientBrowser #E3F2FD {
+  component "React SPA (Vite)" as ReactApp {
+    component "Pages" as Pages {
+      [Landing]
+      [Login / Register]
+      [Input Form]
+      [Result / Recommendations]
+      [Dashboard / Analytics]
+    }
+    component "Components" as Components {
+      [FarmForm]
+      [ResultCard]
+      [ChartSection (D3.js)]
+      [SummaryCard]
+      [Navbar]
+    }
+    component "State Management" as State {
+      [Redux Toolkit Store]
+      [Auth Context]
+    }
+    component "HTTP Client" as HTTP {
+      [Axios + JWT Interceptor]
+    }
+  }
+}
+
+' ══════════════════════════════════════
+' DOCKER NETWORK
+' ══════════════════════════════════════
+node "Docker Host" as DockerHost #ECEFF1 {
+
+  ' ── Frontend Container ──
+  package "frontend-container\n(Node/Nginx)" as FrontendContainer #E8F5E9 {
+    component "Nginx Reverse Proxy" as Nginx {
+      [Static File Server\n(React build)]
+      [Proxy /api/* → backend:5000]
+    }
+  }
+
+  ' ── Backend Container ──
+  package "backend-container\n(Python 3.11)" as BackendContainer #FFF3E0 {
+
+    component "Gunicorn WSGI\n(port 5000)" as Gunicorn
+
+    component "Flask Application" as FlaskApp {
+
+      component "API Blueprints" as Blueprints {
+        [AuthBlueprint\n/api/v1/auth/*]
+        [PredictionBlueprint\n/api/v1/predict*\n/api/v1/crops*]
+        [AnalyticsBlueprint\n/api/v1/analytics/*]
+        [HealthBlueprint\n/health]
+      }
+
+      component "Middleware" as Middleware {
+        [Flask-CORS]
+        [JWT require_auth decorator]
+        [Marshmallow Schemas]
+      }
+
+      component "Service Layer" as Services {
+        component "CropPredictionService\n(Singleton)" as CPS {
+          [Feature Engineering]
+          [CatBoostClassifier\ncrop_model.cbm]
+          [CatBoostRegressor\ncatboost_model.cbm]
+        }
+        component "RecommendationService" as RS {
+          [Crop Requirements Engine]
+          [Soil Gap Analysis]
+        }
+      }
+
+      component "ORM Layer" as ORM {
+        [SQLAlchemy + Flask-SQLAlchemy]
+        [Flask-Migrate (Alembic)]
+      }
+
+    }
+
+    database "SQLite\napp.db" as SQLiteDB {
+      [users table]
+      [prediction_history table]
+    }
+
+    folder "Model Files" as ModelFiles {
+      file "crop_model.cbm\n(5.7 MB)" as CropModel
+      file "catboost_model.cbm\n(1.2 MB)" as YieldModel
+      file "crop_model.pkl\n(193 MB, fallback)" as PKLModel
+    }
+
+    folder "Data Files" as DataFiles {
+      file "nigeria_agri_yield_cleaned.csv\n(20k records)" as Dataset
+      file "crop_requirements.json" as CropReqs
+    }
+
+  }
+
+  ' ── Shared Volume ──
+  database "Docker Volume\n(shared)" as SharedVol #FFF9C4 {
+    [app.db (SQLite)]
+  }
+
+}
+
+' ══════════════════════════════════════
+' EXTERNAL / CLOUD SERVICES
+' ══════════════════════════════════════
+cloud "External / Training\n(Offline)" as External #E3F2FD {
+  [train.py\n(Yield Model Training)]
+  [train_crop_model.py\n(Crop Model Training)]
+  [Nigeria Agri Dataset\n(100k records)]
+  [CatBoost + Scikit-learn\nHyperparameter Tuning]
+}
+
+' ══════════════════════════════════════
+' RELATIONSHIPS
+' ══════════════════════════════════════
+
+' Client ↔ Nginx
+ReactApp -down-> Nginx : HTTPS\n(port 443/80)
+
+' Nginx ↔ Gunicorn
+Nginx -down-> Gunicorn : HTTP proxy\n(port 5000)
+
+' Gunicorn ↔ Flask
+Gunicorn -down-> FlaskApp : WSGI
+
+' Flask internals
+Blueprints -down-> Middleware : filtered through
+Middleware -down-> Services : delegates to
+Services -down-> ORM : persists via
+ORM -down-> SQLiteDB : SQL queries
+CPS -right-> ModelFiles : loads on startup
+
+' Docker shared volume
+SQLiteDB .right. SharedVol : mounted
+
+' Training (offline)
+External -right-> ModelFiles : exports .cbm models
+
+' Data reference
+RS -down-> CropReqs : reads at startup
+
+@enduml

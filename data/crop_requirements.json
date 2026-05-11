@@ -1,0 +1,236 @@
+{
+    "pepper": {
+        "ph": [
+            5.7,
+            6.8
+        ],
+        "nitrogen": [
+            21,
+            41
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            90,
+            158
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            982,
+            1645
+        ]
+    },
+    "beans": {
+        "ph": [
+            5.6,
+            6.8
+        ],
+        "nitrogen": [
+            21,
+            40
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            90,
+            157
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            917,
+            1584
+        ]
+    },
+    "sorghum": {
+        "ph": [
+            5.6,
+            6.8
+        ],
+        "nitrogen": [
+            21,
+            40
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            91,
+            164
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            914,
+            1638
+        ]
+    },
+    "maize": {
+        "ph": [
+            5.7,
+            6.9
+        ],
+        "nitrogen": [
+            21,
+            39
+        ],
+        "phosphorus": [
+            10,
+            23
+        ],
+        "potassium": [
+            84,
+            158
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            940,
+            1611
+        ]
+    },
+    "yam": {
+        "ph": [
+            5.7,
+            6.8
+        ],
+        "nitrogen": [
+            21,
+            41
+        ],
+        "phosphorus": [
+            11,
+            24
+        ],
+        "potassium": [
+            88,
+            164
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            1003,
+            1725
+        ]
+    },
+    "onions": {
+        "ph": [
+            5.6,
+            6.9
+        ],
+        "nitrogen": [
+            20,
+            40
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            88,
+            159
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            925,
+            1599
+        ]
+    },
+    "rice": {
+        "ph": [
+            5.6,
+            6.9
+        ],
+        "nitrogen": [
+            22,
+            39
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            92,
+            163
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            979,
+            1705
+        ]
+    },
+    "cassava": {
+        "ph": [
+            5.7,
+            6.9
+        ],
+        "nitrogen": [
+            21,
+            40
+        ],
+        "phosphorus": [
+            11,
+            23
+        ],
+        "potassium": [
+            83,
+            159
+        ],
+        "temperature": [
+            24,
+            29
+        ],
+        "rainfall": [
+            1027,
+            1722
+        ]
+    },
+    "tomato": {
+        "ph": [
+            5.6,
+            6.8
+        ],
+        "nitrogen": [
+            21,
+            40
+        ],
+        "phosphorus": [
+            10,
+            22
+        ],
+        "potassium": [
+            87,
+            157
+        ],
+        "temperature": [
+            25,
+            29
+        ],
+        "rainfall": [
+            976,
+            1681
+        ]
+    }
+}

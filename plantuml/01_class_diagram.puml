@@ -1,0 +1,350 @@
+@startuml Class_Diagram
+title Soil Nutrition Backend — Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBackgroundColor #F8F9FA
+skinparam classBorderColor #495057
+skinparam arrowColor #343A40
+skinparam packageBackgroundColor #E9ECEF
+skinparam packageBorderColor #ADB5BD
+skinparam shadowing false
+
+' ══════════════════════════════════════
+' BACKEND — DATABASE MODELS
+' ══════════════════════════════════════
+package "Database Models" <<Rectangle>> {
+
+  class User {
+    - id : Integer <<PK>>
+    - email : String(120) <<UNIQUE>>
+    - name : String(100)
+    - password_hash : String(256)
+    - created_at : DateTime
+    --
+    + set_password(password: str) : void
+    + check_password(password: str) : bool
+    + to_dict() : dict
+  }
+
+  class PredictionHistory {
+    - id : Integer <<PK>>
+    - timestamp : DateTime
+    - user_id : Integer <<FK>>
+    - nitrogen : Float
+    - phosphorus : Float
+    - potassium : Float
+    - ph : Float
+    - humidity : Float
+    - temperature : Float
+    - rainfall : Float
+    - recommended_crop : String(100)
+    - confidence : Float
+    - predicted_yield : Float
+    - yield_unit : String(20)
+    - state : String(100)
+    - local_gov : String(100)
+    - plot_size : Float
+    - longitude : Float
+    - latitude : Float
+    - actual_yield : Float
+    - region : String(100)
+    - agro_zone : String(100)
+    - soil_type : String(100)
+    - pest_type : String(100)
+    - pest_severity : String(100)
+    - rainfall_variability : String(100)
+    - labor_input : String(100)
+    --
+    + to_dict() : dict
+  }
+
+  User "1" --> "0..*" PredictionHistory : has
+}
+
+' ══════════════════════════════════════
+' BACKEND — SERVICES
+' ══════════════════════════════════════
+package "Services" <<Rectangle>> {
+
+  class CropPredictionService {
+    - {static} _instance : CropPredictionService
+    - {static} _model : CatBoostClassifier
+    - {static} _yield_model : CatBoostRegressor
+    - {static} _model_loaded : bool
+    - {static} _yield_model_loaded : bool
+    --
+    + {static} __new__() : CropPredictionService
+    + __init__() : void
+    - _load_model() : void
+    - _load_yield_model() : void
+    + predict(input_data: dict) : dict
+    + predict_yield(input_data: dict) : float
+    - _extract_features(input_data: dict) : ndarray
+    - _validate_features(features: ndarray, input_data: dict) : void
+    - _get_prediction_probability(features: ndarray) : float
+    + get_model_info() : dict
+  }
+
+  class RecommendationService {
+    + {static} CROP_REQUIREMENTS : dict
+    --
+    + generate_recommendations(crop: str, input_data: dict, confidence: float) : List[str]
+    - _confidence_recommendations(confidence: float, crop: str) : List[str]
+    - _crop_specific_recommendations(crop: str, input_data: dict) : List[str]
+    - _generic_recommendations(input_data: dict) : List[str]
+    - _soil_health_recommendations(input_data: dict) : List[str]
+    + get_optimal_ranges(crop: str) : dict
+  }
+
+  note right of CropPredictionService
+    Singleton pattern — only one
+    model instance loaded in memory.
+    Loads crop_model.cbm (CatBoost)
+    and catboost_model.cbm (Regressor).
+  end note
+}
+
+' ══════════════════════════════════════
+' BACKEND — SCHEMAS (Marshmallow)
+' ══════════════════════════════════════
+package "Validation Schemas" <<Rectangle>> {
+
+  class PredictionInputSchema {
+    + nitrogen : Float (required)
+    + phosphorus : Float (required)
+    + potassium : Float (required)
+    + ph : Float (required)
+    + temperature : Float (required)
+    + rainfall : Float (required)
+    + humidity : Float
+    + region : String
+    + state : String
+    --
+    + load(data: dict) : dict
+    + dump(obj: dict) : dict
+  }
+
+  class YieldPredictionInputSchema {
+    + nitrogen : Float (required)
+    + phosphorus : Float (required)
+    + potassium : Float (required)
+    + ph : Float (required)
+    + temperature : Float (required)
+    + rainfall : Float (required)
+    + crop_type : String (required)
+    + crop_variety : String
+    + soil_type : String
+    + region : String
+    + state : String
+    + agro_zone : String
+    + farm_size_ha : Float
+    + labor_input : String
+    + pest_severity : String
+    + rainfall_variability : String
+    --
+    + load(data: dict) : dict
+  }
+
+  class PredictionSaveSchema {
+    + nitrogen : Float (required)
+    + phosphorus : Float (required)
+    + potassium : Float (required)
+    + ph : Float (required)
+    + recommended_crop : String (required)
+    + confidence : Float (required)
+    + predicted_yield : Float (required)
+    + state : String (required)
+    + local_gov : String (required)
+    + plot_size : Float (required)
+    + longitude : Float (required)
+    + latitude : Float (required)
+    + humidity : Float
+    + temperature : Float
+    + rainfall : Float
+    + actual_yield : Float
+    --
+    + load(data: dict) : dict
+  }
+}
+
+' ══════════════════════════════════════
+' BACKEND — API BLUEPRINTS
+' ══════════════════════════════════════
+package "API Layer" <<Rectangle>> {
+
+  class AuthBlueprint {
+    <<Blueprint>>
+    + register() : Response [POST /register]
+    + login() : Response [POST /login]
+    + require_auth(f: func) : func <<decorator>>
+  }
+
+  class PredictionBlueprint {
+    <<Blueprint>>
+    + predict_crop(current_user) : Response [POST /predict]
+    + predict_yield() : Response [POST /predict-yield]
+    + save_prediction(current_user) : Response [POST /predict/save]
+    + update_actual_yield(current_user, id) : Response [PATCH /predict/<id>/actual-yield]
+    + get_crop_requirements(crop_name) : Response [GET /crops/<crop>/requirements]
+    + list_available_crops() : Response [GET /crops]
+  }
+
+  class AnalyticsBlueprint {
+    <<Blueprint>>
+    + get_summary(current_user) : Response [GET /analytics/summary]
+    + get_yield_history(current_user) : Response [GET /analytics/yield-history]
+  }
+
+  class HealthBlueprint {
+    <<Blueprint>>
+    + health_check() : Response [GET /health]
+  }
+}
+
+' ══════════════════════════════════════
+' FRONTEND — REACT PAGES
+' ══════════════════════════════════════
+package "Frontend — Pages" <<Rectangle>> {
+
+  class Landing {
+    <<React Page>>
+    + render() : JSX
+  }
+
+  class LoginPage {
+    <<React Page>>
+    - email : string
+    - password : string
+    + handleLogin() : void
+    + render() : JSX
+  }
+
+  class RegisterPage {
+    <<React Page>>
+    - name : string
+    - email : string
+    - password : string
+    + handleRegister() : void
+    + render() : JSX
+  }
+
+  class InputPage {
+    <<React Page>>
+    + render() : JSX
+  }
+
+  class ResultPage {
+    <<React Page>>
+    - predictionData : object
+    - yieldData : object
+    + handleSave() : void
+    + render() : JSX
+  }
+
+  class DashboardPage {
+    <<React Page>>
+    - analyticsData : object
+    - yieldHistory : array
+    + fetchSummary() : void
+    + fetchYieldHistory() : void
+    + render() : JSX
+  }
+}
+
+' ══════════════════════════════════════
+' FRONTEND — COMPONENTS
+' ══════════════════════════════════════
+package "Frontend — Components" <<Rectangle>> {
+
+  class FarmForm {
+    <<React Component>>
+    - nitrogen : number
+    - phosphorus : number
+    - potassium : number
+    - ph : number
+    - temperature : number
+    - rainfall : number
+    - humidity : number
+    - region : string
+    - state : string
+    + handleSubmit() : void
+    + render() : JSX
+  }
+
+  class Navbar {
+    <<React Component>>
+    - isAuthenticated : bool
+    + handleLogout() : void
+    + render() : JSX
+  }
+
+  class ResultCard {
+    <<React Component>>
+    - crop : string
+    - confidence : number
+    - recommendations : array
+    + render() : JSX
+  }
+
+  class ChartSection {
+    <<React Component>>
+    - data : array
+    + render() : JSX
+  }
+
+  class SummaryCard {
+    <<React Component>>
+    - title : string
+    - value : any
+    + render() : JSX
+  }
+}
+
+' ══════════════════════════════════════
+' EXTERNAL ML LIBRARIES
+' ══════════════════════════════════════
+package "ML Models (External)" <<Rectangle>> {
+  class CatBoostClassifier <<external>> {
+    + load_model(path: str) : void
+    + predict_proba(X: DataFrame) : ndarray
+    + classes_ : array
+  }
+  class CatBoostRegressor <<external>> {
+    + load_model(path: str) : void
+    + predict(X: DataFrame) : ndarray
+  }
+}
+
+' ══════════════════════════════════════
+' RELATIONSHIPS
+' ══════════════════════════════════════
+PredictionBlueprint ..> CropPredictionService : uses
+PredictionBlueprint ..> RecommendationService : uses
+PredictionBlueprint ..> PredictionInputSchema : validates with
+PredictionBlueprint ..> YieldPredictionInputSchema : validates with
+PredictionBlueprint ..> PredictionSaveSchema : validates with
+PredictionBlueprint ..> PredictionHistory : persists
+PredictionBlueprint ..> AuthBlueprint : @require_auth
+
+AnalyticsBlueprint ..> PredictionHistory : queries
+AnalyticsBlueprint ..> AuthBlueprint : @require_auth
+
+AuthBlueprint ..> User : manages
+
+CropPredictionService *-- CatBoostClassifier : loads
+CropPredictionService *-- CatBoostRegressor : loads
+
+InputPage *-- FarmForm : contains
+ResultPage *-- ResultCard : contains
+ResultPage *-- ChartSection : contains
+DashboardPage *-- SummaryCard : contains
+DashboardPage *-- ChartSection : contains
+
+LoginPage ..> AuthBlueprint : POST /login
+RegisterPage ..> AuthBlueprint : POST /register
+InputPage ..> PredictionBlueprint : POST /predict
+ResultPage ..> PredictionBlueprint : POST /predict-yield\nPOST /predict/save
+DashboardPage ..> AnalyticsBlueprint : GET /analytics/*
+
+@enduml

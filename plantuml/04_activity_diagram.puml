@@ -1,0 +1,178 @@
+@startuml Activity_Diagram
+title Soil Nutrition Backend — Activity Diagram\n(Full Farmer Journey: Registration → Prediction → Harvest Logging)
+
+skinparam activityBackgroundColor #F8F9FA
+skinparam activityBorderColor #495057
+skinparam activityDiamondBackgroundColor #E3F2FD
+skinparam activityDiamondBorderColor #1565C0
+skinparam arrowColor #343A40
+skinparam shadowing false
+skinparam partitionBackgroundColor #ECEFF1
+skinparam partitionBorderColor #90A4AE
+
+|#BBDEFB| Farmer (Browser) |
+|#C8E6C9| Flask API |
+|#FFF9C4| ML Engine |
+|#FFE0B2| Database |
+
+' ══════════════════════════════════════════
+' REGISTRATION / LOGIN
+' ══════════════════════════════════════════
+|Farmer (Browser)|
+start
+:Open Application;
+:Fill Registration Form\n(name, email, password);
+
+|Flask API|
+:POST /api/v1/auth/register;
+if (Email already exists?) then (Yes)
+  :Return 400 — Email taken;
+  |Farmer (Browser)|
+  :Show error message;
+  :Fill Login Form;
+  |Flask API|
+  :POST /api/v1/auth/login;
+else (No)
+  |Database|
+  :Hash password (PBKDF2);
+  :INSERT INTO users;
+  |Flask API|
+endif
+:Generate JWT token\n(7-day expiry, HS256);
+:Return token + user profile;
+
+|Farmer (Browser)|
+:Store token in Redux store;
+:Redirect to Input Page;
+
+' ══════════════════════════════════════════
+' SOIL DATA ENTRY & CROP PREDICTION
+' ══════════════════════════════════════════
+:Fill Soil & Climate Form\n(N, P, K, pH, Temp, Rainfall,\nHumidity, Region, State, etc.);
+:Submit Form;
+
+|Flask API|
+:POST /api/v1/predict;
+:Extract Bearer token\nfrom Authorization header;
+if (Token valid?) then (No)
+  :Return 401 Unauthorized;
+  |Farmer (Browser)|
+  :Redirect to Login;
+  stop
+else (Yes)
+endif
+
+:Validate payload\n(Marshmallow PredictionInputSchema);
+if (Validation passes?) then (No)
+  :Return 400 Validation Error\n(field-level messages);
+  |Farmer (Browser)|
+  :Show inline form errors;
+  :Correct fields;
+  :Resubmit;
+  |Flask API|
+  :Re-validate;
+else (Yes)
+endif
+
+|ML Engine|
+:Feature Engineering\n────────────────────\nSFI = N + P + K\nNP_ratio = N / (P + ε)\nClimate_Index = Rainfall × Temp\npH_Stress = |pH − 7.0|\nN×pH, P×pH, Rain/Temp;
+:Load CatBoostClassifier\n(crop_model.cbm);
+:predict_proba(feature_vector);
+:Rank probabilities → Top-3 crops;
+
+|Flask API|
+:CropPredictionService.predict();
+:RecommendationService\n.generate_recommendations();
+if (Crop in CROP_REQUIREMENTS?) then (Yes)
+  :Generate crop-specific advice\n(pH, N, P, K, Temp, Rainfall gaps);
+else (No)
+  :Generate generic soil advice;
+endif
+:Return recommended_crop,\nconfidence, top_recommendations,\nrecommendations;
+
+|Farmer (Browser)|
+:Display Results Page\n(Top crop + confidence,\nTop-3 list, Advice);
+
+' ══════════════════════════════════════════
+' YIELD PREDICTION
+' ══════════════════════════════════════════
+:Click "Predict Yield";
+
+|Flask API|
+:POST /api/v1/predict-yield;
+:Validate YieldPredictionInputSchema;
+
+|ML Engine|
+:Feature Engineering (SFI, NP_ratio, CI);
+:Load CatBoostRegressor\n(catboost_model.cbm);
+:predict(feature_vector) → yield_kg_ha;
+
+|Flask API|
+:Return predicted_yield (kg/ha);
+
+|Farmer (Browser)|
+:View Yield Estimate;
+
+' ══════════════════════════════════════════
+' SAVE PREDICTION RECORD
+' ══════════════════════════════════════════
+:Click "Save to Dashboard";
+
+|Flask API|
+:POST /api/v1/predict/save;
+:Validate PredictionSaveSchema;
+if (Duplicate in last 5 min?) then (Yes)
+  :Return 409 Conflict;
+  |Farmer (Browser)|
+  :Show duplicate warning;
+else (No)
+  |Database|
+  :INSERT INTO prediction_history\n(full farm context + geo + results);
+  |Flask API|
+  :Return 201 Created;
+  |Farmer (Browser)|
+  :Show success notification;
+endif
+
+' ══════════════════════════════════════════
+' ANALYTICS DASHBOARD
+' ══════════════════════════════════════════
+:Navigate to Dashboard;
+
+|Flask API|
+:GET /api/v1/analytics/summary;
+|Database|
+:Aggregate: avg_confidence,\ntotal_predictions,\navg_yield_gap (predicted - actual);
+|Flask API|
+:GET /api/v1/analytics/yield-history;
+|Database|
+:GROUP BY month → monthly yield trend;
+|Flask API|
+:Return summary + history;
+
+|Farmer (Browser)|
+:View Charts & KPI Cards;
+
+' ══════════════════════════════════════════
+' HARVEST LOGGING
+' ══════════════════════════════════════════
+:After harvest — enter actual yield;
+:Click "Log Actual Yield";
+
+|Flask API|
+:PATCH /api/v1/predict/<id>/actual-yield;
+:Verify ownership\n(record.user_id == current_user.id);
+if (Authorized?) then (Yes)
+  |Database|
+  :UPDATE prediction_history\nSET actual_yield = ? WHERE id = ?;
+  |Flask API|
+  :Return 200 Success;
+  |Farmer (Browser)|
+  :View updated yield gap;
+else (No)
+  :Return 403 Forbidden;
+endif
+
+stop
+
+@enduml
