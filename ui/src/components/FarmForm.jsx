@@ -15,7 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   Settings2,
-  ChevronRight
+  ChevronRight,
+  Wind
 } from 'lucide-react';
 
 export default function FarmForm({ onSubmit, isLoading = false, errors: externalErrors = {} }) {
@@ -27,9 +28,10 @@ export default function FarmForm({ onSubmit, isLoading = false, errors: external
     ph: '',
     temperature: '',
     rainfall: '',
+    humidity: '',
     // New Advanced Fields
-    region: 'Southwest',
-    state: 'Oyo',
+    region: 'None',
+    state: 'None',
     agro_zone: 'Derived Savanna',
     soil_type: 'Loamy',
     farm_size_ha: '1.0',
@@ -44,7 +46,7 @@ export default function FarmForm({ onSubmit, isLoading = false, errors: external
   const validateForm = () => {
     const newErrors = {};
 
-    const requiredNumeric = ['nitrogen', 'phosphorus', 'potassium', 'ph', 'temperature', 'rainfall'];
+    const requiredNumeric = ['nitrogen', 'phosphorus', 'potassium', 'ph', 'temperature', 'rainfall', 'humidity'];
     requiredNumeric.forEach(field => {
       if (!formData[field] || isNaN(formData[field])) newErrors[field] = 'Required';
     });
@@ -72,12 +74,13 @@ export default function FarmForm({ onSubmit, isLoading = false, errors: external
     { name: 'potassium',  label: 'Potassium (K)',  icon: <Database className="w-5 h-5" /> },
     { name: 'ph',         label: 'Soil pH',        icon: <Droplets className="w-5 h-5" /> },
     { name: 'temperature',label: 'Temp (°C)',      icon: <Thermometer className="w-5 h-5" /> },
-    { name: 'rainfall',   label: 'Rainfall (mm)',  icon: <CloudRain className="w-5 h-5" /> }
+    { name: 'rainfall',   label: 'Rainfall (mm)',  icon: <CloudRain className="w-5 h-5" /> },
+    { name: 'humidity',   label: 'Humidity (%)',   icon: <Wind className="w-5 h-5" /> }
   ];
 
   const advancedFields = [
-    { name: 'region', label: 'Region', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['Northcentral', 'Northeast', 'Northwest', 'Southeast', 'Southsouth', 'Southwest'] },
-    { name: 'state', label: 'State', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'] },
+    { name: 'region', label: 'Region', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['None', 'Northcentral', 'Northeast', 'Northwest', 'Southeast', 'Southsouth', 'Southwest'] },
+    { name: 'state', label: 'State', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['None', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'] },
     { name: 'agro_zone', label: 'Agro Zone', icon: <Mountain className="w-5 h-5" />, type: 'select', options: ['Derived Savanna', 'Humid Forest', 'Northern Guinea Savanna', 'Sahel Savanna', 'Sudan Savanna'] },
     { name: 'soil_type', label: 'Soil Type', icon: <Droplets className="w-5 h-5" />, type: 'select', options: ['Clayey', 'Lateritic', 'Loamy', 'Sandy'] },
     { name: 'farm_size_ha', label: 'Farm Size (Ha)', icon: <Scaling className="w-5 h-5" />, type: 'number' },

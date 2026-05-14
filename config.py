@@ -5,7 +5,12 @@ load_dotenv()
 
 class Config:
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-for-now')
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        if os.environ.get('FLASK_DEBUG', 'False').lower() == 'true':
+             SECRET_KEY = 'dev-key-for-now'
+        else:
+             raise RuntimeError("SECRET_KEY must be set in environment for production.")
     CORS_HEADERS = 'Content-Type'
     
     # Database Configuration

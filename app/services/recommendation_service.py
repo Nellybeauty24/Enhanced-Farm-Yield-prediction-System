@@ -22,7 +22,8 @@ def _load_crop_requirements() -> Dict[str, Dict[str, tuple]]:
             # Convert lists to tuples since JSON parses them as lists
             for crop, reqs in data.items():
                 for param, tr in reqs.items():
-                    reqs[param] = tuple(tr)
+                    if isinstance(tr, list):
+                        reqs[param] = tuple(tr)
             
             logger.info(f"Loaded dynamic requirements for {len(data)} crops.")
             return data

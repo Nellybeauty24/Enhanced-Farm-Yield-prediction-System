@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, m
 from catboost import CatBoostRegressor, Pool
 
 # File path
-DATA_PATH = 'data/nigeria_agri_yield_cleaned-updated.xlsx'
+DATA_PATH = 'data/nigeria_agri_yield_enhanced.csv'
 
 def load_and_inspect_data(filepath):
     """
@@ -20,7 +20,7 @@ def load_and_inspect_data(filepath):
         
     try:
         print(f"Loading data from {filepath}...")
-        df = pd.read_excel(filepath)
+        df = pd.read_csv(filepath)
         
         # Print dataset shape
         print(f"\nDataset Shape: {df.shape}")
@@ -83,8 +83,8 @@ def prepare_data(df):
     if target_col not in df.columns:
          raise ValueError(f"Target column '{target_col}' not found.")
 
-    # Separate X and y
-    X = df.drop(columns=[target_col])
+    # Separate X and y, and drop non-causal geographic tags
+    X = df.drop(columns=[target_col, 'region', 'state'], errors='ignore')
     y = df[target_col]
     
     # Identify categorical columns (dtype object)
@@ -147,15 +147,15 @@ def train_cv_loop(X, y, skf, cat_features, stratification_col):
         
         # Initialize CatBoostRegressor
         model = CatBoostRegressor(
-            iterations=500,
-            learning_rate=0.05,
+            iterations=300,
+            learning_rate=0.08,
             depth=6,
             loss_function='RMSE',
             eval_metric='RMSE',
             random_seed=42,
             cat_features=cat_features,
-            verbose=100,
-            early_stopping_rounds=150
+            verbose=0,
+            early_stopping_rounds=50
         )
         
         # Train model
@@ -194,8 +194,8 @@ def train_final_model(X, y, cat_features):
     print("\nTraining Final Model on Full Dataset...")
     
     model = CatBoostRegressor(
-        iterations=500,
-        learning_rate=0.05,
+        iterations=400,
+        learning_rate=0.08,
         depth=6,
         loss_function='RMSE',
         eval_metric='RMSE',

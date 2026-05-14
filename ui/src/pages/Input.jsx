@@ -30,6 +30,7 @@ export default function Input() {
         ph: parseFloat(formData.ph),
         temperature: parseFloat(formData.temperature),
         rainfall: parseFloat(formData.rainfall),
+        humidity: parseFloat(formData.humidity),
         farm_size_ha: parseFloat(formData.farm_size_ha || 1.0)
       };
 

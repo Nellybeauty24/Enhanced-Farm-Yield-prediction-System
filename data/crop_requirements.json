@@ -1,236 +1,119 @@
 {
-    "pepper": {
-        "ph": [
-            5.7,
-            6.8
-        ],
-        "nitrogen": [
-            21,
-            41
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            90,
-            158
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            982,
-            1645
-        ]
-    },
-    "beans": {
-        "ph": [
-            5.6,
-            6.8
-        ],
-        "nitrogen": [
-            21,
-            40
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            90,
-            157
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            917,
-            1584
-        ]
-    },
-    "sorghum": {
-        "ph": [
-            5.6,
-            6.8
-        ],
-        "nitrogen": [
-            21,
-            40
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            91,
-            164
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            914,
-            1638
-        ]
-    },
-    "maize": {
-        "ph": [
-            5.7,
-            6.9
-        ],
-        "nitrogen": [
-            21,
-            39
-        ],
-        "phosphorus": [
-            10,
-            23
-        ],
-        "potassium": [
-            84,
-            158
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            940,
-            1611
-        ]
-    },
-    "yam": {
-        "ph": [
-            5.7,
-            6.8
-        ],
-        "nitrogen": [
-            21,
-            41
-        ],
-        "phosphorus": [
-            11,
-            24
-        ],
-        "potassium": [
-            88,
-            164
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            1003,
-            1725
-        ]
-    },
-    "onions": {
-        "ph": [
-            5.6,
-            6.9
-        ],
-        "nitrogen": [
-            20,
-            40
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            88,
-            159
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            925,
-            1599
-        ]
-    },
     "rice": {
-        "ph": [
-            5.6,
-            6.9
-        ],
-        "nitrogen": [
-            22,
-            39
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            92,
-            163
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            979,
-            1705
-        ]
+        "ph": [5.0, 6.5],
+        "nitrogen": [60, 120],
+        "phosphorus": [15, 45],
+        "potassium": [30, 80],
+        "temperature": [24, 35],
+        "rainfall": [1200, 2500],
+        "humidity": [70, 95],
+        "agro_zones": ["Humid Forest", "Derived Savanna"],
+        "soil_types": ["Clay", "Clay Loam", "Alluvial"],
+        "base_yield": 3800,
+        "yield_variance": 700
     },
     "cassava": {
-        "ph": [
-            5.7,
-            6.9
-        ],
-        "nitrogen": [
-            21,
-            40
-        ],
-        "phosphorus": [
-            11,
-            23
-        ],
-        "potassium": [
-            83,
-            159
-        ],
-        "temperature": [
-            24,
-            29
-        ],
-        "rainfall": [
-            1027,
-            1722
-        ]
+        "ph": [4.5, 6.0],
+        "nitrogen": [10, 40],
+        "phosphorus": [8, 30],
+        "potassium": [80, 200],
+        "temperature": [25, 34],
+        "rainfall": [1000, 2000],
+        "humidity": [60, 85],
+        "agro_zones": ["Humid Forest", "Derived Savanna"],
+        "soil_types": ["Sandy Loam", "Lateritic", "Loamy"],
+        "base_yield": 12000,
+        "yield_variance": 2000
+    },
+    "yam": {
+        "ph": [5.5, 6.8],
+        "nitrogen": [30, 70],
+        "phosphorus": [20, 55],
+        "potassium": [100, 180],
+        "temperature": [25, 33],
+        "rainfall": [1000, 1800],
+        "humidity": [65, 90],
+        "agro_zones": ["Humid Forest", "Derived Savanna", "Northern Guinea Savanna"],
+        "soil_types": ["Loamy", "Sandy Loam", "Clay Loam"],
+        "base_yield": 8000,
+        "yield_variance": 1500
+    },
+    "maize": {
+        "ph": [5.8, 7.2],
+        "nitrogen": [80, 140],
+        "phosphorus": [30, 80],
+        "potassium": [40, 100],
+        "temperature": [18, 30],
+        "rainfall": [500, 1200],
+        "humidity": [50, 75],
+        "agro_zones": ["Derived Savanna", "Northern Guinea Savanna"],
+        "soil_types": ["Loamy", "Clay Loam", "Sandy Loam"],
+        "base_yield": 4200,
+        "yield_variance": 800
+    },
+    "sorghum": {
+        "ph": [6.0, 7.8],
+        "nitrogen": [20, 60],
+        "phosphorus": [15, 50],
+        "potassium": [25, 70],
+        "temperature": [28, 40],
+        "rainfall": [300, 800],
+        "humidity": [25, 55],
+        "agro_zones": ["Sudan Savanna", "Northern Guinea Savanna", "Sahel Savanna"],
+        "soil_types": ["Sandy", "Sandy Loam", "Lateritic"],
+        "base_yield": 3200,
+        "yield_variance": 600
+    },
+    "beans": {
+        "ph": [6.0, 7.0],
+        "nitrogen": [5, 30],
+        "phosphorus": [40, 100],
+        "potassium": [30, 80],
+        "temperature": [18, 28],
+        "rainfall": [350, 900],
+        "humidity": [40, 65],
+        "agro_zones": ["Northern Guinea Savanna", "Sudan Savanna", "Derived Savanna"],
+        "soil_types": ["Sandy Loam", "Loamy", "Sandy"],
+        "base_yield": 1800,
+        "yield_variance": 400
+    },
+    "onions": {
+        "ph": [6.2, 7.5],
+        "nitrogen": [40, 90],
+        "phosphorus": [30, 70],
+        "potassium": [50, 120],
+        "temperature": [15, 27],
+        "rainfall": [300, 700],
+        "humidity": [25, 50],
+        "agro_zones": ["Sudan Savanna", "Sahel Savanna"],
+        "soil_types": ["Sandy Loam", "Loamy", "Clay Loam"],
+        "base_yield": 15000,
+        "yield_variance": 3000
     },
     "tomato": {
-        "ph": [
-            5.6,
-            6.8
-        ],
-        "nitrogen": [
-            21,
-            40
-        ],
-        "phosphorus": [
-            10,
-            22
-        ],
-        "potassium": [
-            87,
-            157
-        ],
-        "temperature": [
-            25,
-            29
-        ],
-        "rainfall": [
-            976,
-            1681
-        ]
+        "ph": [5.5, 6.8],
+        "nitrogen": [50, 110],
+        "phosphorus": [40, 90],
+        "potassium": [60, 150],
+        "temperature": [20, 29],
+        "rainfall": [400, 1000],
+        "humidity": [50, 70],
+        "agro_zones": ["Derived Savanna", "Northern Guinea Savanna", "Sudan Savanna"],
+        "soil_types": ["Loamy", "Sandy Loam", "Clay Loam"],
+        "base_yield": 20000,
+        "yield_variance": 4000
+    },
+    "pepper": {
+        "ph": [5.5, 7.0],
+        "nitrogen": [40, 85],
+        "phosphorus": [25, 65],
+        "potassium": [80, 160],
+        "temperature": [24, 33],
+        "rainfall": [600, 1300],
+        "humidity": [55, 80],
+        "agro_zones": ["Derived Savanna", "Humid Forest", "Northern Guinea Savanna"],
+        "soil_types": ["Loamy", "Sandy Loam", "Lateritic"],
+        "base_yield": 5000,
+        "yield_variance": 1000
     }
 }

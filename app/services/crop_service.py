@@ -4,15 +4,14 @@ Handles ML model loading, prediction logic, and probability calculation.
 """
 
 import os
-import pickle
 import numpy as np
 import pandas as pd
 from typing import Dict, Tuple, Optional
 import logging
 from catboost import CatBoostRegressor, CatBoostClassifier
+from ..utils.features import compute_crop_features_from_input
 
 logger = logging.getLogger(__name__)
-
 
 class CropPredictionService:
     """Service for predicting suitable crops based on soil and environmental data."""
@@ -45,14 +44,6 @@ class CropPredictionService:
             model_path = os.path.join(base_dir, 'models', 'crop_model.cbm')
             
             if not os.path.exists(model_path):
-                # Fallback to old pickle model if cbm doesn't exist yet
-                old_path = os.path.join(base_dir, 'models', 'crop_model.pkl')
-                if os.path.exists(old_path):
-                    with open(old_path, 'rb') as f:
-                        self._model = pickle.load(f)
-                    self._model_loaded = True
-                    return
-                
                 logger.error(f"Crop model file NOT FOUND at {model_path}")
                 self._model_loaded = False
                 return
@@ -118,7 +109,7 @@ class CropPredictionService:
             if not self._model_loaded or self._model is None:
                 raise Exception("Model not loaded. Cannot perform prediction.")
             
-            # Feature engineering for the high-performance model
+            # Extract raw inputs
             nitrogen = input_data['nitrogen']
             phosphorus = input_data['phosphorus']
             potassium = input_data['potassium']
@@ -126,25 +117,18 @@ class CropPredictionService:
             temperature = input_data['temperature']
             ph = input_data['ph']
             
-            sfi = nitrogen + phosphorus + potassium
-            npr = nitrogen / (phosphorus + 1e-6)
-            ci = rainfall * temperature
-            ph_stress = abs(ph - 7.0)
-            
-            # NEW: Interaction features from the 57% accuracy sprint
-            n_ph_inter = nitrogen * ph
-            p_ph_inter = phosphorus * ph
-            rain_temp_ratio = rainfall / (temperature + 1e-6)
+            # Use shared feature engineering module
+            engineered = compute_crop_features_from_input(
+                nitrogen, phosphorus, potassium, ph, temperature, rainfall
+            )
 
-            # Extract features in the EXACT order used in train_crop_model.py
+            # Build input DataFrame matching training feature order
             df_input = pd.DataFrame([{
-                'region': input_data.get('region', 'Unknown'),
-                'state': input_data.get('state', 'Unknown'),
                 'agro_zone': input_data.get('agro_zone', 'Unknown'),
                 'soil_type': input_data.get('soil_type', 'Unknown'),
                 'pest_type': input_data.get('pest_type', 'None'),
-                'pest_severity': input_data.get('pest_severity', 'Low'),
-                'rainfall_variability': input_data.get('rainfall_variability', 'Medium'),
+                'pest_severity': input_data.get('pest_severity', 'None'),
+                'rainfall_variability': input_data.get('rainfall_variability', 'Normal'),
                 'labor_input': input_data.get('labor_input', 'Medium'),
                 'soil_nitrogen': nitrogen,
                 'soil_phosphorus': phosphorus,
@@ -152,14 +136,9 @@ class CropPredictionService:
                 'soil_pH': ph,
                 'temperature_C': temperature,
                 'rainfall_mm': rainfall,
+                'humidity': input_data.get('humidity', 60.0),
                 'farm_size_ha': input_data.get('farm_size_ha', 1.0),
-                'soil_fertility_index': sfi,
-                'np_ratio': npr,
-                'climate_index': ci,
-                'ph_stress': ph_stress,
-                'n_ph_inter': n_ph_inter,
-                'p_ph_inter': p_ph_inter,
-                'rain_temp_ratio': rain_temp_ratio
+                **engineered
             }])
             
             # Make prediction with probabilities
@@ -210,52 +189,41 @@ class CropPredictionService:
                 if not self._yield_model_loaded:
                     raise Exception("Yield prediction model not loaded.")
 
-            # Prepare features for CatBoost
-            # Feature mapping based on training data columns
-            features = {
-                'nitrogen': input_data.get('nitrogen'),
-                'phosphorus': input_data.get('phosphorus'),
-                'potassium': input_data.get('potassium'),
-                'ph': input_data.get('ph'),
-                'rainfall': input_data.get('rainfall'),
-                'temperature': input_data.get('temperature'),
+            # Prepare features matching ALL 27 columns the yield model expects
+            nitrogen = input_data.get('nitrogen')
+            phosphorus = input_data.get('phosphorus')
+            potassium = input_data.get('potassium')
+            ph = input_data.get('ph')
+            rainfall = input_data.get('rainfall')
+            temperature = input_data.get('temperature')
+
+            sfi = nitrogen + phosphorus + potassium
+            npr = nitrogen / (phosphorus + 1e-6)
+            ci = rainfall * temperature
+            
+            df_input = pd.DataFrame([{
+                'agro_zone': input_data.get('agro_zone', 'Unknown'),
                 'crop_type': input_data.get('crop_type'),
                 'crop_variety': input_data.get('crop_variety', 'Unknown'),
                 'soil_type': input_data.get('soil_type', 'Unknown'),
-                'region': input_data.get('region', 'Unknown'),
-                'state': input_data.get('state', 'Unknown'),
-                'agro_zone': input_data.get('agro_zone', 'Unknown'),
                 'farm_size_ha': input_data.get('farm_size_ha', 1.0),
+                'soil_pH': ph,
+                'soil_nitrogen': nitrogen,
+                'soil_phosphorus': phosphorus,
+                'soil_potassium': potassium,
+                'rainfall_mm': rainfall,
+                'temperature_C': temperature,
+                'fertilizer_type': input_data.get('fertilizer_type', 'NPK'),
+                'fertilizer_amount_kg_ha': input_data.get('fertilizer_amount_kg_ha', 100.0),
+                'irrigation_type': input_data.get('irrigation_type', 'Rainfed'),
+                'pest_type': input_data.get('pest_type', 'None'),
+                'pest_severity': input_data.get('pest_severity', 'None'),
+                'rainfall_variability': input_data.get('rainfall_variability', 'Normal'),
+                'temperature_stress': input_data.get('temperature_stress', 'None'),
+                'extreme_weather': input_data.get('extreme_weather', 'None'),
                 'labor_input': input_data.get('labor_input', 'Medium'),
-                'rainfall_variability': input_data.get('rainfall_variability', 'Medium'),
-                'pest_severity': input_data.get('pest_severity', 'Low'),
-                'pest_type': input_data.get('pest_type', 'None')
-            }
-            
-            # We need to calculate engineered features:
-            sfi = features['nitrogen'] + features['phosphorus'] + features['potassium']
-            npr = features['nitrogen'] / (features['phosphorus'] + 1e-6)
-            ci = features['rainfall'] * features['temperature']
-            
-            # Map robustly using Pandas DataFrame with exact column names from training
-            df_input = pd.DataFrame([{
-                'region': features['region'],
-                'state': features['state'],
-                'agro_zone': features['agro_zone'],
-                'crop_type': features['crop_type'],
-                'crop_variety': features['crop_variety'],
-                'soil_type': features['soil_type'],
-                'farm_size_ha': features['farm_size_ha'],
-                'soil_pH': features['ph'],
-                'soil_nitrogen': features['nitrogen'],
-                'soil_phosphorus': features['phosphorus'],
-                'soil_potassium': features['potassium'],
-                'rainfall_mm': features['rainfall'],
-                'temperature_C': features['temperature'],
-                'pest_type': features['pest_type'],
-                'pest_severity': features['pest_severity'],
-                'rainfall_variability': features['rainfall_variability'],
-                'labor_input': features['labor_input'],
+                'soil_degradation': input_data.get('soil_degradation', 'None'),
+                'humidity': input_data.get('humidity', 60.0),
                 'soil_fertility_index': sfi,
                 'np_ratio': npr,
                 'climate_index': ci

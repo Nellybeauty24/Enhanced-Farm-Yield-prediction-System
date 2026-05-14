@@ -5,7 +5,7 @@ Provides data for dashboard visualizations and historical trends.
 
 from flask import jsonify, request, Blueprint
 from datetime import datetime, timedelta
-from sqlalchemy import func
+from sqlalchemy import func, extract, cast, String
 import logging
 
 analytics_bp = Blueprint('analytics', __name__)
@@ -120,27 +120,31 @@ def get_yield_history(current_user):
         days = request.args.get('days', 365, type=int)
         start_date = datetime.utcnow() - timedelta(days=days)
         
-        # Query average yield grouped by month (SQLite strftime)
+        # Query average yield grouped by month (database-agnostic)
+        year_col = extract('year', PredictionHistory.timestamp).label('yr')
+        month_col = extract('month', PredictionHistory.timestamp).label('mo')
+
         history = db.session.query(
-            func.strftime('%Y-%m', PredictionHistory.timestamp).label('month'),
+            year_col,
+            month_col,
             func.avg(PredictionHistory.predicted_yield).label('avg_yield'),
             func.count(PredictionHistory.id).label('count')
         ).filter(
             PredictionHistory.timestamp >= start_date,
             PredictionHistory.predicted_yield.isnot(None),
             PredictionHistory.user_id == current_user.id
-        ).group_by(func.strftime('%Y-%m', PredictionHistory.timestamp))\
-         .order_by(func.strftime('%Y-%m', PredictionHistory.timestamp))\
+        ).group_by(year_col, month_col)\
+         .order_by(year_col, month_col)\
          .all()
         
         # Format to friendly month labels (e.g., "Jan", "Feb")
+        import calendar
         formatted_history = []
         for row in history:
             try:
-                dt = datetime.strptime(row.month, '%Y-%m')
-                label = dt.strftime('%b')  # e.g. "Jan"
+                label = calendar.month_abbr[int(row.mo)]
             except Exception:
-                label = row.month
+                label = f"{int(row.yr)}-{int(row.mo):02d}"
             formatted_history.append({
                 "month": label,
                 "yield": round(float(row.avg_yield), 2),
