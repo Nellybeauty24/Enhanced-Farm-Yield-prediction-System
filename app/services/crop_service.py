@@ -126,10 +126,6 @@ class CropPredictionService:
             df_input = pd.DataFrame([{
                 'agro_zone': input_data.get('agro_zone', 'Unknown'),
                 'soil_type': input_data.get('soil_type', 'Unknown'),
-                'pest_type': input_data.get('pest_type', 'None'),
-                'pest_severity': input_data.get('pest_severity', 'None'),
-                'rainfall_variability': input_data.get('rainfall_variability', 'Normal'),
-                'labor_input': input_data.get('labor_input', 'Medium'),
                 'soil_nitrogen': nitrogen,
                 'soil_phosphorus': phosphorus,
                 'soil_potassium': potassium,
@@ -137,7 +133,6 @@ class CropPredictionService:
                 'temperature_C': temperature,
                 'rainfall_mm': rainfall,
                 'humidity': input_data.get('humidity', 60.0),
-                'farm_size_ha': input_data.get('farm_size_ha', 1.0),
                 **engineered
             }])
             

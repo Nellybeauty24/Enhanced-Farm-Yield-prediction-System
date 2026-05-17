@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import sys
 import numpy as np
+# pyrefly: ignore [missing-import]
 from catboost import CatBoostClassifier, Pool
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import accuracy_score, classification_report

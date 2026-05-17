@@ -33,12 +33,7 @@ export default function FarmForm({ onSubmit, isLoading = false, errors: external
     region: 'None',
     state: 'None',
     agro_zone: 'Derived Savanna',
-    soil_type: 'Loamy',
-    farm_size_ha: '1.0',
-    pest_type: 'None',
-    pest_severity: 'Low',
-    rainfall_variability: 'Normal',
-    labor_input: 'Medium'
+    soil_type: 'Loamy'
   });
 
   const [errors, setErrors] = useState({});
@@ -82,12 +77,7 @@ export default function FarmForm({ onSubmit, isLoading = false, errors: external
     { name: 'region', label: 'Region', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['None', 'Northcentral', 'Northeast', 'Northwest', 'Southeast', 'Southsouth', 'Southwest'] },
     { name: 'state', label: 'State', icon: <MapPin className="w-5 h-5" />, type: 'select', options: ['None', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'] },
     { name: 'agro_zone', label: 'Agro Zone', icon: <Mountain className="w-5 h-5" />, type: 'select', options: ['Derived Savanna', 'Humid Forest', 'Northern Guinea Savanna', 'Sahel Savanna', 'Sudan Savanna'] },
-    { name: 'soil_type', label: 'Soil Type', icon: <Droplets className="w-5 h-5" />, type: 'select', options: ['Clayey', 'Lateritic', 'Loamy', 'Sandy'] },
-    { name: 'farm_size_ha', label: 'Farm Size (Ha)', icon: <Scaling className="w-5 h-5" />, type: 'number' },
-    { name: 'pest_type', label: 'Common Pest', icon: <Bug className="w-5 h-5" />, type: 'select', options: ['None', 'Aphids', 'Cassava Mealybug', 'Desert Locust', 'Fall Armyworm', 'Fruit Flies', 'Grasshoppers', 'Locusts', 'Millet Head Miner', 'Pod Borers', 'Stem Borers', 'Thrips', 'Tomato Leaf Miner', 'Whiteflies'] },
-    { name: 'pest_severity', label: 'Pest Severity', icon: <Bug className="w-5 h-5" />, type: 'select', options: ['Low', 'Moderate', 'High'] },
-    { name: 'rainfall_variability', label: 'Rain Pattern', icon: <CloudRain className="w-5 h-5" />, type: 'select', options: ['Normal', 'Erratic', 'Reduced'] },
-    { name: 'labor_input', label: 'Labor Intensity', icon: <Users className="w-5 h-5" />, type: 'select', options: ['Low', 'Medium', 'High'] }
+    { name: 'soil_type', label: 'Soil Type', icon: <Droplets className="w-5 h-5" />, type: 'select', options: ['Clayey', 'Lateritic', 'Loamy', 'Sandy'] }
   ];
 
   return (

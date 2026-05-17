@@ -80,11 +80,6 @@ class PredictionInputSchema(Schema):
     state = fields.String(load_default="Unknown")
     agro_zone = fields.String(load_default="Unknown")
     soil_type = fields.String(load_default="Unknown")
-    farm_size_ha = fields.Float(load_default=1.0)
-    pest_type = fields.String(load_default="None")
-    pest_severity = fields.String(load_default="Low")
-    rainfall_variability = fields.String(load_default="Medium")
-    labor_input = fields.String(load_default="Medium")
     
     @validates('nitrogen')
     def validate_nitrogen(self, value: float, **kwargs) -> None:
@@ -269,10 +264,6 @@ class PredictionSaveSchema(Schema):
     region = fields.String(required=False)
     agro_zone = fields.String(required=False)
     soil_type = fields.String(required=False)
-    pest_type = fields.String(required=False)
-    pest_severity = fields.String(required=False)
-    rainfall_variability = fields.String(required=False)
-    labor_input = fields.String(required=False)
 
 class YieldPredictionInputSchema(PredictionInputSchema):
     """
@@ -287,14 +278,9 @@ class YieldPredictionInputSchema(PredictionInputSchema):
     
     crop_variety = fields.String(load_default="Unknown")
     soil_type = fields.String(load_default="Unknown")
-    pest_type = fields.String(load_default="None")
-    pest_severity = fields.String(load_default="Low")
     region = fields.String(load_default="Unknown")
     state = fields.String(load_default="Unknown")
     agro_zone = fields.String(load_default="Unknown")
-    farm_size_ha = fields.Float(load_default=1.0)
-    labor_input = fields.String(load_default="Medium")
-    rainfall_variability = fields.String(load_default="Medium")
 
     @validates('crop_type')
     def validate_crop_type(self, value: str, **kwargs) -> None:

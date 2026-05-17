@@ -109,9 +109,8 @@ for s in scenarios:
     # Crop prediction
     crop_features = [
         'agro_zone', 'soil_type',
-        'pest_type', 'pest_severity', 'rainfall_variability', 'labor_input',
         'soil_nitrogen', 'soil_phosphorus', 'soil_potassium',
-        'soil_pH', 'temperature_C', 'rainfall_mm', 'humidity', 'farm_size_ha',
+        'soil_pH', 'temperature_C', 'rainfall_mm', 'humidity',
         'soil_fertility_index', 'np_ratio', 'climate_index', 'ph_stress',
         'n_ph_inter', 'p_ph_inter', 'rain_temp_ratio'
     ]

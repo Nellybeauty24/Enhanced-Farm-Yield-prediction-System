@@ -83,8 +83,8 @@ def prepare_data(df):
     if target_col not in df.columns:
          raise ValueError(f"Target column '{target_col}' not found.")
 
-    # Separate X and y, and drop non-causal geographic tags
-    X = df.drop(columns=[target_col, 'region', 'state'], errors='ignore')
+    # Separate X and y, and drop non-causal and unused tags
+    X = df.drop(columns=[target_col, 'region', 'state', 'pest_type', 'pest_severity', 'labor_input', 'farm_size_ha', 'rainfall_variability'], errors='ignore')
     y = df[target_col]
     
     # Identify categorical columns (dtype object)
