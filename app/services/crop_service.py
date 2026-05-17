@@ -184,7 +184,6 @@ class CropPredictionService:
                 if not self._yield_model_loaded:
                     raise Exception("Yield prediction model not loaded.")
 
-            # Prepare features matching ALL 27 columns the yield model expects
             nitrogen = input_data.get('nitrogen')
             phosphorus = input_data.get('phosphorus')
             potassium = input_data.get('potassium')
@@ -195,10 +194,13 @@ class CropPredictionService:
             sfi = nitrogen + phosphorus + potassium
             npr = nitrogen / (phosphorus + 1e-6)
             ci = rainfall * temperature
-            
-            df_input = pd.DataFrame([{
+
+            # All possible feature values keyed by the column name used during training
+            data_dict = {
+                'region': input_data.get('region', 'Unknown'),
+                'state': input_data.get('state', 'Unknown'),
                 'agro_zone': input_data.get('agro_zone', 'Unknown'),
-                'crop_type': input_data.get('crop_type'),
+                'crop_type': input_data.get('crop_type', 'Unknown'),
                 'crop_variety': input_data.get('crop_variety', 'Unknown'),
                 'soil_type': input_data.get('soil_type', 'Unknown'),
                 'farm_size_ha': input_data.get('farm_size_ha', 1.0),
@@ -221,8 +223,32 @@ class CropPredictionService:
                 'humidity': input_data.get('humidity', 60.0),
                 'soil_fertility_index': sfi,
                 'np_ratio': npr,
-                'climate_index': ci
-            }])
+                'climate_index': ci,
+            }
+
+            # Determine cat feature names from the model (by name, not positional index)
+            model_feature_names = getattr(self._yield_model, 'feature_names_', None)
+            cat_idxs = self._yield_model.get_cat_feature_indices() if hasattr(self._yield_model, 'get_cat_feature_indices') else []
+            cat_feature_names = set()
+            if model_feature_names and cat_idxs:
+                cat_feature_names = {model_feature_names[i] for i in cat_idxs}
+
+            if model_feature_names:
+                # Build DataFrame in the exact column order the model was trained on
+                row = {}
+                for feat in model_feature_names:
+                    if feat in data_dict:
+                        val = data_dict[feat]
+                    else:
+                        val = 'Unknown' if feat in cat_feature_names else 0.0
+                    row[feat] = str(val) if feat in cat_feature_names else val
+                df_input = pd.DataFrame([row])[list(model_feature_names)]
+            else:
+                # Fallback: build DataFrame from data_dict and convert cat features by name
+                df_input = pd.DataFrame([data_dict])
+                for col in cat_feature_names:
+                    if col in df_input.columns:
+                        df_input[col] = df_input[col].astype(str)
 
             prediction = self._yield_model.predict(df_input)[0]
             
