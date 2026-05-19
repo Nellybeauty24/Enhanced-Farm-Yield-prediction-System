@@ -20,7 +20,7 @@
         "temperature": [25, 34],
         "rainfall": [1000, 2000],
         "humidity": [60, 85],
-        "agro_zones": ["Humid Forest", "Derived Savanna"],
+        "agro_zones": ["Humid Forest", "Derived Savanna", "Northern Guinea Savanna"],
         "soil_types": ["Sandy Loam", "Lateritic", "Loamy"],
         "base_yield": 12000,
         "yield_variance": 2000
@@ -60,7 +60,7 @@
         "rainfall": [300, 800],
         "humidity": [25, 55],
         "agro_zones": ["Sudan Savanna", "Northern Guinea Savanna", "Sahel Savanna"],
-        "soil_types": ["Sandy", "Sandy Loam", "Lateritic"],
+        "soil_types": ["Sandy", "Sandy Loam", "Lateritic", "Loamy", "Clay Loam"],
         "base_yield": 3200,
         "yield_variance": 600
     },
@@ -79,7 +79,7 @@
     },
     "onions": {
         "ph": [6.2, 7.5],
-        "nitrogen": [40, 90],
+        "nitrogen": [30, 70],
         "phosphorus": [30, 70],
         "potassium": [50, 120],
         "temperature": [15, 27],

@@ -13,10 +13,13 @@ from ..utils.features import compute_crop_features_from_input
 
 logger = logging.getLogger(__name__)
 
+import threading
+
 class CropPredictionService:
     """Service for predicting suitable crops based on soil and environmental data."""
     
     _instance = None
+    _lock = threading.Lock()
     _model = None
     _yield_model = None
     _model_loaded = False
@@ -29,11 +32,12 @@ class CropPredictionService:
         return cls._instance
     
     def __init__(self):
-        """Initialize the service and load the model if not already loaded."""
-        if not self._model_loaded:
-            self._load_model()
-        if not self._yield_model_loaded:
-            self._load_yield_model()
+        """Initialize the service and load the model if not already loaded with thread safety."""
+        with self._lock:
+            if not self._model_loaded:
+                self._load_model()
+            if not self._yield_model_loaded:
+                self._load_yield_model()
     
     def _load_model(self) -> None:
         """
@@ -122,10 +126,15 @@ class CropPredictionService:
                 nitrogen, phosphorus, potassium, ph, temperature, rainfall
             )
 
+            # Standardize soil type names
+            soil_type = input_data.get('soil_type', 'Unknown')
+            if soil_type == 'Clayey':
+                soil_type = 'Clay'
+
             # Build input DataFrame matching training feature order
             df_input = pd.DataFrame([{
                 'agro_zone': input_data.get('agro_zone', 'Unknown'),
-                'soil_type': input_data.get('soil_type', 'Unknown'),
+                'soil_type': soil_type,
                 'soil_nitrogen': nitrogen,
                 'soil_phosphorus': phosphorus,
                 'soil_potassium': potassium,
@@ -194,13 +203,18 @@ class CropPredictionService:
             rainfall = input_data.get('rainfall')
             temperature = input_data.get('temperature')
 
+            # Standardize soil type names
+            soil_type = input_data.get('soil_type', 'Unknown')
+            if soil_type == 'Clayey':
+                soil_type = 'Clay'
+
             sfi = nitrogen + phosphorus + potassium
             npr = nitrogen / (phosphorus + 1e-6)
             ci = rainfall * temperature
             df_input = pd.DataFrame([{
                 'crop_type': input_data.get('crop_type'),
                 'crop_variety': input_data.get('crop_variety', 'Unknown'),
-                'soil_type': input_data.get('soil_type', 'Unknown'),
+                'soil_type': soil_type,
                 'soil_pH': ph,
                 'soil_nitrogen': nitrogen,
                 'soil_phosphorus': phosphorus,

@@ -6,7 +6,10 @@ payload = {
     'humidity': 60, 'agro_zone': 'Derived Savanna', 'soil_type': 'Loamy'
 }
 res1 = service.predict(payload)
-res2 = service.predict(payload)
-print(f"Res 1: {res1}")
-print(f"Res 2: {res2}")
-print(f"Deterministic? {res1 == res2}")
+print(f"Crop Prediction: {res1}")
+
+# Test Yield Prediction
+yield_payload = {**payload, 'crop_type': res1['recommended_crop']}
+yield_res = service.predict_yield(yield_payload)
+print(f"Yield Prediction: {yield_res} kg/ha")
+

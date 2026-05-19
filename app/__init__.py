@@ -19,6 +19,15 @@ def create_app(config_class=Config):
 
     app.register_blueprint(api_v1, url_prefix='/api/v1')
 
+    # Eagerly load ML models during application startup to prevent I/O bottlenecks and race conditions
+    with app.app_context():
+        try:
+            from app.services import CropPredictionService
+            app.logger.info("Eagerly initializing CropPredictionService to pre-load CatBoost models...")
+            CropPredictionService()
+        except Exception as e:
+            app.logger.error(f"Failed to eagerly load ML models during startup: {str(e)}")
+
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'message': 'Soil Nutrition Prediction API is running'}, 200
