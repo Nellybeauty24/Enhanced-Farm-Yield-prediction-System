@@ -16,5 +16,6 @@ numpy
 catboost
 scikit-learn
 matplotlib
+seaborn
 shap
 openpyxl

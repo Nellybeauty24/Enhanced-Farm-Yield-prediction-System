@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 # pyrefly: ignore [missing-import]
@@ -135,7 +137,7 @@ plt.close()
 # 4. Per-Class Classification Performance
 print("Generating Per-Class Classification Performance Chart...")
 from sklearn.metrics import classification_report
-report = classification_report(crop_y_true, crop_y_pred, output_dict=True)
+report = classification_report(crop_y_true, crop_y_pred, output_dict=True, zero_division=0)
 
 # Extract metrics for crops only (skip accuracy, macro avg, etc.)
 crops = [c for c in report.keys() if c not in ['accuracy', 'macro avg', 'weighted avg']]
