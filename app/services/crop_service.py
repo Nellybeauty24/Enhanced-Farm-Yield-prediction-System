@@ -136,6 +136,9 @@ class CropPredictionService:
                 **engineered
             }])
             
+            # Reorder columns to match exactly what the model expects
+            df_input = df_input[self._model.feature_names_]
+            
             # Make prediction with probabilities
             probs = self._model.predict_proba(df_input)[0]
             classes = self._model.classes_
@@ -194,16 +197,10 @@ class CropPredictionService:
             sfi = nitrogen + phosphorus + potassium
             npr = nitrogen / (phosphorus + 1e-6)
             ci = rainfall * temperature
-
-            # All possible feature values keyed by the column name used during training
-            data_dict = {
-                'region': input_data.get('region', 'Unknown'),
-                'state': input_data.get('state', 'Unknown'),
-                'agro_zone': input_data.get('agro_zone', 'Unknown'),
-                'crop_type': input_data.get('crop_type', 'Unknown'),
+            df_input = pd.DataFrame([{
+                'crop_type': input_data.get('crop_type'),
                 'crop_variety': input_data.get('crop_variety', 'Unknown'),
                 'soil_type': input_data.get('soil_type', 'Unknown'),
-                'farm_size_ha': input_data.get('farm_size_ha', 1.0),
                 'soil_pH': ph,
                 'soil_nitrogen': nitrogen,
                 'soil_phosphorus': phosphorus,
@@ -213,42 +210,18 @@ class CropPredictionService:
                 'fertilizer_type': input_data.get('fertilizer_type', 'NPK'),
                 'fertilizer_amount_kg_ha': input_data.get('fertilizer_amount_kg_ha', 100.0),
                 'irrigation_type': input_data.get('irrigation_type', 'Rainfed'),
-                'pest_type': input_data.get('pest_type', 'None'),
-                'pest_severity': input_data.get('pest_severity', 'None'),
-                'rainfall_variability': input_data.get('rainfall_variability', 'Normal'),
                 'temperature_stress': input_data.get('temperature_stress', 'None'),
                 'extreme_weather': input_data.get('extreme_weather', 'None'),
-                'labor_input': input_data.get('labor_input', 'Medium'),
                 'soil_degradation': input_data.get('soil_degradation', 'None'),
+                'agro_zone': input_data.get('agro_zone', 'Unknown'),
                 'humidity': input_data.get('humidity', 60.0),
                 'soil_fertility_index': sfi,
                 'np_ratio': npr,
-                'climate_index': ci,
-            }
+                'climate_index': ci
+            }])
 
-            # Determine cat feature names from the model (by name, not positional index)
-            model_feature_names = getattr(self._yield_model, 'feature_names_', None)
-            cat_idxs = self._yield_model.get_cat_feature_indices() if hasattr(self._yield_model, 'get_cat_feature_indices') else []
-            cat_feature_names = set()
-            if model_feature_names and cat_idxs:
-                cat_feature_names = {model_feature_names[i] for i in cat_idxs}
-
-            if model_feature_names:
-                # Build DataFrame in the exact column order the model was trained on
-                row = {}
-                for feat in model_feature_names:
-                    if feat in data_dict:
-                        val = data_dict[feat]
-                    else:
-                        val = 'Unknown' if feat in cat_feature_names else 0.0
-                    row[feat] = str(val) if feat in cat_feature_names else val
-                df_input = pd.DataFrame([row])[list(model_feature_names)]
-            else:
-                # Fallback: build DataFrame from data_dict and convert cat features by name
-                df_input = pd.DataFrame([data_dict])
-                for col in cat_feature_names:
-                    if col in df_input.columns:
-                        df_input[col] = df_input[col].astype(str)
+            # Reorder columns to match exactly what the model expects
+            df_input = df_input[self._yield_model.feature_names_]
 
             prediction = self._yield_model.predict(df_input)[0]
             
